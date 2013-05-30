@@ -45,27 +45,30 @@ def get_failed_header(content_type):
     return s
 
 def get_directory_page(dir_path):
-    files_to_display = [f for f in os.listdir(dir_path) if f[0] != '.'] 
-    # don't show hidden files
+    try:
+        files_to_display = [f for f in os.listdir(dir_path) if f[0] != '.'] 
+        # don't show hidden files
 
-    s  = '<html>'
-    if stylesheet != None:
-        s += '<head><style>'
-        s += stylesheet
-        s += '</style></head>'
+        s  = '<html>'
+        if stylesheet != None:
+            s += '<head><style>'
+            s += stylesheet
+            s += '</style></head>'
 
-    s += '<body>'
-    s += '<h1>{0}</h1>'.format(dir_path)
-    s += '<a href="http://localhost" class="folder">../</a>'
-    for f in files_to_display:
-        file_type = 'file'
-        if os.path.isdir(os.path.join(dir_path, f)):
-            file_type = 'directory'
-            f += '/'
-        s += '<a href="{0}" class="{1}">{2}</a>'.format(dir_path+f, file_type, f)
-    s += '</body>'
-    s += '</html>'
-    return s
+        s += '<body>'
+        s += '<h1>{0}</h1>'.format(dir_path)
+        s += '<a href="http://localhost" class="folder">../</a>'
+        for f in files_to_display:
+            file_type = 'file'
+            if os.path.isdir(os.path.join(dir_path, f)):
+                file_type = 'directory'
+                f += '/'
+            s += '<a href="{0}" class="{1}">{2}</a>'.format(dir_path+f, file_type, f)
+        s += '</body>'
+        s += '</html>'
+        return s
+    except:
+        return "Error retreiving directory"
 
 def print_file_to_socket(socket, file_path):
     try:
