@@ -25,8 +25,14 @@ def get_http_header():
     s += '\n'
     return s
 
+
+
 def print_file_to_socket(socket, file_path):
     try:
+        if (file_path.split('.')[-1] == 'html'):
+            print 'HTML page requested'
+            print_to_socket(socket, get_http_header())
+
         f = file(file_path)
         for x in f:
             print_to_socket(socket, x.strip())
@@ -46,7 +52,8 @@ def get_requested_address(request):
     return result
 
 def get_server_socket(port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
     s.bind(('localhost', port))
     return s
 
@@ -58,7 +65,7 @@ def handle_client(client, request):
 
     if requested_path == '/':
         print_file_to_socket(client, default_page_path)
-    elif not print_to_socket(client, get_http_header()):
+    elif not print_file_to_socket(client, '.' + requested_path):
         print_file_to_socket(client, error_page_path)
 
     client.close()
