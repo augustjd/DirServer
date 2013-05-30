@@ -1,41 +1,69 @@
 #!/usr/bin/python
 
-from os import *
+import os
 from string import *
 import socket
-from mimetypes import *
+import mimetypes
 
 server_port = 80
 
-default_page_path = './static_page.html'
+default_page_path = './'
 error_page_path = './404.html'
 
 def print_to_socket(socket, msg):
     sent = 0
-    msg = msg + '\n'
+    msg = msg
     total_length = len(msg)
     while sent < total_length:
         sent += socket.send(msg[sent:])
 
-def get_http_header():
+def get_http_header(content_type):
     s = 'HTTP/1.0 200 OK\n'
     # can't do date function without the time library
-    s += 'Content-Type: text/html\n'
+    s += 'Content-Type: {0}\n'.format(content_type)
     #s += 'Content-Length: {1}\n'.format(len(msg))
     s += '\n'
     return s
 
+def get_failed_header(content_type):
+    s = 'HTTP/1.0 404 Not Found\n'
+    # can't do date function without the time library
+    s += 'Content-Type: {0}\n'.format(content_type)
+    #s += 'Content-Length: {1}\n'.format(len(msg))
+    s += '\n'
+    return s
 
+def get_directory_page(dir_path):
+    files_to_display = [f for f in os.listdir(dir_path) if f[0] != '.'] 
+    # don't show hidden files
+
+    s  = '<html>'
+    s += '<body>'
+    s += '<h1>{0}</h1>'.format(dir_path)
+    for f in files_to_display:
+        s += '<a href="{0}">{1}</a>'.format(dir_path+f, f)
+        s += '<br>'
+    s += '</body>'
+    s += '</html>'
+    return s
 
 def print_file_to_socket(socket, file_path):
     try:
-        if (file_path.split('.')[-1] == 'html'):
-            print 'HTML page requested'
-            print_to_socket(socket, get_http_header())
+        (type, encoding) = mimetypes.guess_type(file_path)
+        print type, "page requested..."
+        if (file_path == error_page_path):
+            print 'Error 404'
+            #print_to_socket(socket, get_failed_header(type))
+        elif type == None: #it's a folder
+            print "Folder requested..."
+            print_to_socket(socket, get_http_header(type))
+            print_to_socket(socket, get_directory_page(file_path))
+            return
+        else:
+            print_to_socket(socket, get_http_header(type))
 
         f = file(file_path)
-        for x in f:
-            print_to_socket(socket, x.strip())
+        print_to_socket(socket, f.read())
         return True
     except IOError:
         return False
